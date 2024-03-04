@@ -12,14 +12,14 @@ type Event struct {
 	Descrption string    `json:"description"|binding:"required"`
 	Location   string    `json:"location"|binding:"required"`
 	DateTime   time.Time `json:"datetime"|binding:"required"`
-	UserID     int       `json:"userid"`
+	UserID     int       `json:"user_id"`
 }
 
 var events = []Event{}
 
 func (e *Event) Save() error {
 	query := `INSERT INTO events 
-	(name, description, location, datetime, userid)
+	(name, description, location, datetime, user_id)
 	VALUES (?, ?, ?, ?, ?);`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
@@ -60,4 +60,45 @@ func GetAllEvents() ([]Event, error) {
 
 	}
 	return events, nil
+}
+
+func GetEvent(id int64) (*Event, error) {
+	query := `SELECT * FROM events WHERE id = ?;`
+	row := db.DB.QueryRow(query, id)
+	var e Event
+	err := row.Scan(&e.ID, &e.Name, &e.Descrption, &e.Location, &e.DateTime, &e.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &e, nil
+}
+
+func (e *Event) UpdateEvent() error {
+	query := `UPDATE events 
+				SET name = ?, description = ?, location = ?, datetime = ? 
+				WHERE id = ?;`
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(e.Name, e.Descrption, e.Location, e.DateTime, e.UserID, e.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Event) DeleteEvent() error {
+	query := `DELETE FROM events WHERE id = ?;`
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(e.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
