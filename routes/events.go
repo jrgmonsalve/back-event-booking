@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -33,17 +32,19 @@ func getEvents(c *gin.Context) {
 }
 
 func createEvent(c *gin.Context) {
+
 	var event models.Event
+
+	event.UserID = c.GetInt64("userId")
+
 	err := c.ShouldBindJSON(&event)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 	err = event.Save()
 	if err != nil {
-		log.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-		c.JSON(http.StatusInternalServerError, gin.H{"error---------->>>>>": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
